@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorador Interactivo de la Teoría Sexual de Freud</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Calm Academia -->
+    <!-- Application Structure Plan: La aplicación está organizada en secciones temáticas navegables a través de una barra superior fija, en lugar de un desplazamiento lineal. La estructura es: 1) Inicio (introducción), 2) Conceptos Fundamentales (tarjetas interactivas para ideas clave como Libido/Pulsiones), 3) Desarrollo Psicosexual (una línea de tiempo visual e interactiva para explorar cada fase), 4) Clínica y Críticas (una sección con pestañas para separar la clínica, el legado y las críticas), y 5) Síntesis (una tabla comparativa final). Esta arquitectura no lineal fomenta la exploración dirigida por el usuario, permitiéndole profundizar en áreas de interés específico y facilitando la digestión de conceptos complejos al segmentarlos en componentes interactivos y manejables. -->
+    <!-- Visualization & Content Choices: 1. Pulsiones (Eros/Thanatos): Meta: Comparar. Visualización: Gráfico de dona (Chart.js) para mostrar la dualidad. Interacción: Tooltip al pasar el cursor. Justificación: Representa visualmente el conflicto central. 2. Desarrollo Psicosexual: Meta: Mostrar proceso/cambio. Visualización: Línea de tiempo interactiva con HTML/CSS/JS. Interacción: Clic en cada etapa para mostrar su descripción detallada. Justificación: Transforma una lista de texto en una exploración secuencial y guiada. 3. Clínica/Legado/Críticas: Meta: Organizar/Comparar. Visualización: Sistema de pestañas y tabla HTML. Interacción: Clic en pestañas para cambiar de contenido, hover en filas de la tabla. Justificación: Organiza una gran cantidad de texto relacionado en categorías claras y comparables, evitando la sobrecarga de información. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fdfaf6;
+            color: #4a4a4a;
+        }
+        .nav-link {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #d17b62;
+            border-bottom-color: #d17b62;
+        }
+        .stage-button {
+            transition: all 0.3s ease;
+            border-color: #e0e0e0;
+        }
+        .stage-button.active, .stage-button:hover {
+            background-color: #d17b62;
+            color: white;
+            border-color: #d17b62;
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background-color: #d17b62;
+            color: white;
+        }
+        .content-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <span class="text-xl font-bold text-gray-800">Teoría Freudiana</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#inicio" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Inicio</a>
+                        <a href="#conceptos" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Conceptos</a>
+                        <a href="#desarrollo" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Desarrollo</a>
+                        <a href="#clinica" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Clínica y Críticas</a>
+                        <a href="#sintesis" class="nav-link px-3 py-2 rounded-md text-sm font-medium">Síntesis</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section id="inicio" class="py-20 md:py-28">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-gray-900">Explorando la Teoría Sexual de Freud</h1>
+                <p class="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-gray-600">
+                    Una aplicación interactiva para desglosar y comprender los conceptos fundamentales de los "Tres ensayos para una teoría sexual" de Sigmund Freud. Navegue a través de las secciones para descubrir las ideas que revolucionaron la comprensión de la psique humana.
+                </p>
+            </div>
+        </section>
+
+        <section id="conceptos" class="py-16 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Conceptos Fundamentales</h2>
+                    <p class="mt-4 text-lg text-gray-600">Freud introdujo un nuevo vocabulario para describir la vida psíquica. Estos son algunos de los pilares de su teoría sexual, que ven la sexualidad no solo como un acto reproductivo, sino como una fuerza motriz central en el desarrollo humano desde el nacimiento.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Libido: La Energía Psíquica</h3>
+                        <p class="text-gray-600">Freud define la libido como la fuerza motriz fundamental de la vida psíquica. Es la energía de las pulsiones o instintos que tienen que ver con todo lo que puede designarse con la palabra "amor". No se limita a la genitalidad, sino que abarca un amplio rango de impulsos de vida.</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Instintos Parciales</h3>
+                        <p class="text-gray-600">Desde el nacimiento, existen impulsos como la succión, la prensión o la defecación, localizados en "zonas erógenas". La gratificación de estos instintos parciales es crucial y va configurando la personalidad del individuo a lo largo de su desarrollo.</p>
+                    </div>
+                    <div class="content-card p-6">
+                        <h3 class="text-xl font-semibold mb-2 text-gray-800">Pulsiones de Vida y Muerte</h3>
+                        <p class="text-gray-600">Más allá de la libido, Freud postuló una dualidad fundamental. <strong>Eros (Pulsión de Vida)</strong> agrupa los impulsos de amor y construcción. <strong>Thanatos (Pulsión de Muerte)</strong>, introducida más tarde, explica las tendencias autodestructivas y la agresividad.</p>
+                        <div class="chart-container mt-4">
+                            <canvas id="drivesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="desarrollo" class="py-16">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Teoría del Desarrollo Psicosexual</h2>
+                    <p class="mt-4 text-lg text-gray-600">Freud propuso que la personalidad se desarrolla a través de una serie de etapas en la infancia, cada una centrada en una zona erógena diferente. Los conflictos no resueltos en una etapa pueden llevar a "fijaciones". Haga clic en cada etapa para explorar sus características.</p>
+                </div>
+                
+                <div class="w-full mb-8">
+                    <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 md:space-x-4">
+                        <button class="stage-button w-full md:w-auto flex-1 px-4 py-2 border rounded-lg font-semibold" data-stage="oral">Oral (0-1 año)</button>
+                        <button class="stage-button w-full md:w-auto flex-1 px-4 py-2 border rounded-lg font-semibold" data-stage="anal">Anal (1-3 años)</button>
+                        <button class="stage-button w-full md:w-auto flex-1 px-4 py-2 border rounded-lg font-semibold" data-stage="falica">Fálica (3-6 años)</button>
+                        <button class="stage-button w-full md:w-auto flex-1 px-4 py-2 border rounded-lg font-semibold" data-stage="latencia">Latencia (6-pubertad)</button>
+                        <button class="stage-button w-full md:w-auto flex-1 px-4 py-2 border rounded-lg font-semibold" data-stage="genital">Genital (pubertad+)</button>
+                    </div>
+                </div>
+
+                <div id="stage-content" class="content-card p-8 min-h-[20rem] flex items-center justify-center">
+                    <div class="text-center">
+                        <h3 id="stage-title" class="text-2xl font-bold text-gray-800 mb-2">Seleccione una etapa</h3>
+                        <p id="stage-description" class="text-gray-600">La información sobre la etapa seleccionada aparecerá aquí.</p>
+                        <div id="stage-details" class="mt-4 text-left"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="clinica" class="py-16 bg-white">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                 <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Clínica, Legado y Críticas</h2>
+                    <p class="mt-4 text-lg text-gray-600">La teoría de Freud no solo describió el desarrollo, sino que fundó un método clínico y dejó un legado que fue, y sigue siendo, objeto de intensos debates y revisiones. Explore los diferentes aspectos de su impacto utilizando las pestañas a continuación.</p>
+                </div>
+
+                <div class="w-full max-w-4xl mx-auto">
+                    <div class="mb-4 flex space-x-1 p-1 bg-gray-200 rounded-xl">
+                        <button class="tab-button w-full py-2.5 text-sm font-medium leading-5 text-gray-700 rounded-lg" data-tab="clinica">Clínica</button>
+                        <button class="tab-button w-full py-2.5 text-sm font-medium leading-5 text-gray-700 rounded-lg" data-tab="legado">Legado</button>
+                        <button class="tab-button w-full py-2.5 text-sm font-medium leading-5 text-gray-700 rounded-lg" data-tab="criticas">Críticas</button>
+                    </div>
+                    <div id="tab-content-container" class="mt-2">
+                        <div id="tab-clinica" class="tab-content content-card p-6"></div>
+                        <div id="tab-legado" class="tab-content hidden content-card p-6"></div>
+                        <div id="tab-criticas" class="tab-content hidden content-card p-6"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="sintesis" class="py-16">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">Síntesis Crítica</h2>
+                    <p class="mt-4 text-lg text-gray-600">Esta tabla resume los aportes centrales de la teoría freudiana frente a sus principales limitaciones y las críticas que ha recibido a lo largo del tiempo, ofreciendo un balance de su impacto duradero.</p>
+                </div>
+
+                <div class="content-card overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aporte Central</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Limitaciones / Críticas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sintesis-table-body" class="bg-white divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white mt-16 border-t">
+        <div class="container mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-gray-500">
+            <p>&copy; 2025 Explorador de la Teoría Freudiana. Creado con fines educativos.</p>
+        </div>
+    </footer>
+
+    <script>
+        const appData = {
+            stages: {
+                oral: {
+                    title: 'Fase Oral (0-1 año)',
+                    description: 'El placer se centra en la boca a través de la succión y la alimentación.',
+                    details: `<ul>
+                        <li class="mb-2"><strong class="text-gray-700">Zona Erógena:</strong> Boca, labios, lengua.</li>
+                        <li class="mb-2"><strong class="text-gray-700">Actividad Principal:</strong> Succión, morder, comer.</li>
+                        <li><strong class="text-gray-700">Posibles Fijaciones:</strong> Fumar, comer en exceso, morderse las uñas, dependencia o agresividad verbal.</li>
+                    </ul>`
+                },
+                anal: {
+                    title: 'Fase Anal (1-3 años)',
+                    description: 'El foco del placer se traslada al control de los esfínteres y la defecación.',
+                    details: `<ul>
+                        <li class="mb-2"><strong class="text-gray-700">Zona Erógena:</strong> Ano.</li>
+                        <li class="mb-2"><strong class="text-gray-700">Actividad Principal:</strong> Retención y expulsión de heces.</li>
+                        <li><strong class="text-gray-700">Posibles Fijaciones:</strong> Carácter "anal retentivo" (tacañería, rigidez, obsesión por el orden) o "anal expulsivo" (desorden, crueldad).</li>
+                    </ul>`
+                },
+                falica: {
+                    title: 'Fase Fálica (3-6 años)',
+                    description: 'El interés se centra en los genitales y surge el Complejo de Edipo.',
+                    details: `<ul>
+                        <li class="mb-2"><strong class="text-gray-700">Zona Erógena:</strong> Genitales.</li>
+                        <li class="mb-2"><strong class="text-gray-700">Conflicto Clave:</strong> Complejo de Edipo (deseo por el progenitor del sexo opuesto y rivalidad con el del mismo sexo).</li>
+                        <li><strong class="text-gray-700">Posibles Fijaciones:</strong> Problemas de identidad sexual, vanidad, imprudencia o problemas de autoridad.</li>
+                    </ul>`
+                },
+                latencia: {
+                    title: 'Período de Latencia (6-pubertad)',
+                    description: 'La energía libidinal se sublima y se dirige hacia el aprendizaje y las relaciones sociales.',
+                    details: `<p>No es una fase psicosexual en sí misma, sino un período de calma. La energía sexual se canaliza hacia actividades socialmente aceptables, como la escuela, los hobbies y las amistades. Freud no lo consideraba un "apagón" sexual, sino una reorientación de la energía.</p>`
+                },
+                genital: {
+                    title: 'Fase Genital (Pubertad en adelante)',
+                    description: 'Reorientación de la libido hacia objetos externos y relaciones sexuales maduras.',
+                    details: `<p>El individuo busca la gratificación sexual a través de relaciones mutuamente satisfactorias. Si las etapas anteriores se completaron con éxito, la persona desarrollará un equilibrio saludable entre el amor y el trabajo.</p>`
+                }
+            },
+            tabs: {
+                clinica: `
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Clínica Psicoanalítica</h3>
+                    <div class="space-y-4 text-gray-600">
+                        <div><strong class="text-gray-700">Complejo de Edipo:</strong> Postulado como universal, es el deseo inconsciente del niño por el progenitor del sexo opuesto y la rivalidad con el del mismo sexo. La resolución de este complejo es clave para la maduración psíquica.</div>
+                        <div><strong class="text-gray-700">Sexualidad Infantil:</strong> Freud introduce el concepto de "perversión polimorfa", donde los niños exploran el placer en todas las zonas erógenas sin un fin reproductivo.</div>
+                        <div><strong class="text-gray-700">Dinámica de la Neurosis:</strong> La represión de pulsiones (sexuales, agresivas) genera ansiedad, que se convierte en síntomas (fobias, obsesiones) a través de mecanismos como la conversión o el desplazamiento.</div>
+                        <div><strong class="text-gray-700">Métodos Clínicos:</strong> La <span class="font-semibold">asociación libre</span> (hablar sin censura), el <span class="font-semibold">análisis de sueños</span> ("vía regia al inconsciente") y el estudio de <span class="font-semibold">actos fallidos</span> son las herramientas para acceder a los conflictos reprimidos.</div>
+                    </div>`,
+                legado: `
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Legado Multidisciplinar</h3>
+                    <div class="space-y-4 text-gray-600">
+                        <div><strong class="text-gray-700">Psicología y Psiquiatría:</strong> Fundó el psicoanálisis e introdujo conceptos como pulsión, represión e inconsciente, que son ejes de toda la terapia dinámica moderna.</div>
+                        <div><strong class="text-gray-700">Sociología:</strong> Mostró cómo las instituciones (familia, religión, Estado) moldean la sexualidad y establecen tabúes, como la barrera del incesto, para regular la vida social.</div>
+                        <div><strong class="text-gray-700">Filosofía:</strong> Problematizó el conflicto eterno entre el instinto individual y la norma social, anticipando debates sobre libertad, deseo y civilización.</div>
+                    </div>`,
+                criticas: `
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800">Principales Críticas y Actualizaciones</h3>
+                    <div class="space-y-4 text-gray-600">
+                         <div><strong class="text-gray-700">Homosexualidad:</strong> Inicialmente vista como una variante "arcaica", su patologización fue matizándose con el tiempo. Hoy en día, la psicología no la considera una patología.</div>
+                        <div><strong class="text-gray-700">Críticas Feministas:</strong> Denuncian el androcentrismo de la teoría (centrada en el hombre), especialmente en conceptos como la "envidia del pene". Autoras como Irigaray o Benjamin han reelaborado el modelo desde perspectivas relacionales.</div>
+                        <div><strong class="text-gray-700">Posestructuralismo:</strong> Filósofos como Foucault criticaron la "medicalización" de la sexualidad por parte de Freud, aunque valoraron su análisis de cómo el poder y el saber se ejercen sobre los cuerpos.</div>
+                    </div>`
+            },
+            sintesis: [
+                { aporte: 'Sexualidad como motor del psiquismo', critica: 'Modelos iniciales heteronormativos y binarios' },
+                { aporte: 'Teoría de las pulsiones (Eros y Thanatos)', critica: 'Introducción tardía y a veces implícita de Thanatos' },
+                { aporte: 'Desarrollo psicosexual y fijaciones', critica: 'Excesiva universalización de etapas y complejos' },
+                { aporte: 'Inconsciente y mecanismos de defensa', critica: 'Subestimación del rol cultural y social en la represión' },
+                { aporte: 'Transformación de tabúes y normas sociales', critica: 'Androcentrismo en la teoría de la sexualidad femenina' }
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const drivesChartCtx = document.getElementById('drivesChart').getContext('2d');
+            new Chart(drivesChartCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Eros (Pulsión de Vida)', 'Thanatos (Pulsión de Muerte)'],
+                    datasets: [{
+                        label: 'Dualidad Pulsional',
+                        data: [50, 50],
+                        backgroundColor: ['#d17b62', '#5a677d'],
+                        borderColor: ['#fdfaf6'],
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.label + ': Una fuerza fundamental en constante conflicto.';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const stageButtons = document.querySelectorAll('.stage-button');
+            const stageTitle = document.getElementById('stage-title');
+            const stageDescription = document.getElementById('stage-description');
+            const stageDetails = document.getElementById('stage-details');
+            const initialContent = {
+                title: 'Haga clic en una etapa para comenzar',
+                description: 'Explore el desarrollo psicosexual propuesto por Freud, desde el nacimiento hasta la madurez.',
+                details: ''
+            };
+
+            function updateStageContent(stageKey) {
+                const stageData = appData.stages[stageKey] || initialContent;
+                stageTitle.textContent = stageData.title;
+                stageDescription.textContent = stageData.description;
+                stageDetails.innerHTML = stageData.details;
+
+                stageButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.stage === stageKey);
+                });
+            }
+            
+            updateStageContent('oral');
+
+            stageButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    updateStageContent(button.dataset.stage);
+                });
+            });
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            document.getElementById('tab-clinica').innerHTML = appData.tabs.clinica;
+            document.getElementById('tab-legado').innerHTML = appData.tabs.legado;
+            document.getElementById('tab-criticas').innerHTML = appData.tabs.criticas;
+
+            function updateTabContent(activeTab) {
+                tabContents.forEach(content => {
+                    content.classList.toggle('hidden', content.id !== `tab-${activeTab}`);
+                });
+                 tabButtons.forEach(button => {
+                    button.classList.toggle('active', button.dataset.tab === activeTab);
+                });
+            }
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                   updateTabContent(button.dataset.tab);
+                });
+            });
+            
+            updateTabContent('clinica');
+
+            const sintesisTableBody = document.getElementById('sintesis-table-body');
+            appData.sintesis.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-800">${item.aporte}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.critica}</td>
+                `;
+                sintesisTableBody.appendChild(row);
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('main section');
+            
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if(pageYOffset >= sectionTop - 80) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if(link.getAttribute('href') === `#${current}`) {
+                        link.classList.add('active');
+                    }
+                })
+            });
+
+        });
+    </script>
+
+</body>
+</html>
